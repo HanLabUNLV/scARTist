@@ -1,0 +1,76 @@
+# scARTist configuration
+# All paths and parameters that were hardcoded in the original scripts now live here.
+# Every path may be absolute or relative to the directory Snakemake is launched from.
+
+# ----------------------------------------------------------------------------
+# Reference inputs the user must supply (see docs/inputs.md)
+# ----------------------------------------------------------------------------
+inputs:
+  # Real single-cell isoform/transcript count matrix that scDesign2 is fit to.
+  # Rows = pipe-delimited GENCODE transcript headers; columns = cells.
+  real_count_matrix: "resources/Bcell.NumReads.filtered.rowsum55.protein.txt"
+
+  # rMATS event->exon->transcript map. Used ONLY to flag rMATS-detectable
+  # features when choosing differential-splicing genes. This file is a product
+  # of the separate benchmarking project; here it is a fixed input.
+  mapped_events: "resources/Mapped.EventsToExons.txt"
+
+  # GENCODE transcript sequences as a 2-column tab file (header, sequence),
+  # produced by: seqkit fx2tab gencode.v34.transcripts.fa > gencode.v34.transcripts.tab
+  gencode_transcripts_tab: "resources/gencode.v34.transcripts.tab"
+
+  # Illumina quality profiles for art_modern (R1 / R2).
+  qual_profile_r1: "resources/HiSeq2500L125R1.txt"
+  qual_profile_r2: "resources/HiSeq2500L125R2.txt"
+
+  # RSEM reference prefix (the files <prefix>.grp, <prefix>.ti, <prefix>.seq, ...
+  # produced by rsem-prepare-reference). Used by rsem-tbam2gbam.
+  rsem_reference_prefix: "resources/rsem_reference/Homo_sapiens.GRCh38.v34"
+
+# ----------------------------------------------------------------------------
+# Container (art_modern + samtools + rsem-tbam2gbam + seqkit)
+# ----------------------------------------------------------------------------
+container:
+  # Path to the prebuilt Singularity/Apptainer image, or build it from
+  # containers/art_modern.def (see docs/installation.md).
+  sif: "resources/art.sif"
+  # Extra bind mounts passed to `singularity exec --bind` (comma-separated),
+  # e.g. the storage root that holds your inputs/outputs.
+  bind: ""
+
+# ----------------------------------------------------------------------------
+# scDesign2 model-fit parameters (Stage 1, run once)
+# ----------------------------------------------------------------------------
+model:
+  seed: 123
+  cell_type: "Bcell"          # label used inside scDesign2 fit/simulate
+  marginal: "nb"              # negative-binomial marginals
+  read_len: 50                # used only for effective-length (length - read_len + 1)
+  nbr_diff_expr: 1000         # number of genes given a DE fold change
+  nbr_diff_spliced: 1000      # number of genes given differential transcript usage
+  fit_ncores: 20              # ncores passed to fit_model_scDesign2
+  # biomaRt gene->chromosome lookup. Set use_cache: true to read a shipped
+  # cached table instead of hitting the live Ensembl archive (reproducibility).
+  biomart_host: "feb2014.archive.ensembl.org"
+  biomart_dataset: "hsapiens_gene_ensembl"
+  use_cached_biomart: false
+  biomart_cache: "resources/gene_chromosome_cache.tsv"
+
+# ----------------------------------------------------------------------------
+# Simulation sweep grid (Stage 2). Full cross-product is simulated.
+# ----------------------------------------------------------------------------
+sweep:
+  read_depths: [10000000, 41000000, 83000000]   # total_count_new per config
+  n_cells: [80, 150]
+  arms: ["null", "deds"]      # null = no signal; deds = DE + differential splicing
+
+# ----------------------------------------------------------------------------
+# art_modern read-simulation parameters (Stage 4, per cell)
+# ----------------------------------------------------------------------------
+reads:
+  read_len: 125
+  fcov: 10                    # per-transcript fold coverage (--i-fcov)
+  pe_frag_dist_mean: 300
+  pe_frag_dist_std_dev: 50
+  art_threads: 4              # --parallel for art_modern and -@ for samtools
+  rsem_threads: 4             # -p for rsem-tbam2gbam

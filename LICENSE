@@ -1,0 +1,15 @@
+LICENSE - DECISION NEEDED BEFORE PUBLIC RELEASE
+
+This pipeline orchestrates external tools via their command-line interfaces:
+  - art_modern (GNU GPL v3)
+  - scDesign2 (check its repository license)
+  - RSEM, samtools (their own licenses)
+  - biomaRt and other R/Bioconductor packages (their own licenses)
+
+Calling GPL tools as separate processes over a CLI does not by itself impose GPL
+on this workflow's own scripts, but confirm with your institution. Choose and
+insert the full license text here before making the repository public. A
+permissive license (MIT / BSD-3-Clause) is common for workflow code; GPL-3.0 is
+also reasonable given the art_modern dependency.
+
+Copyright (c) 2026 <AUTHORS / INSTITUTION - fill in>

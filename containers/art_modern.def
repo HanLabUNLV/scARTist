@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: condaforge/mambaforge:latest
+
+# Apptainer/Singularity definition that reproduces the tools bundled in the
+# original art.sif: art_modern, samtools, rsem (rsem-tbam2gbam), seqkit.
+#
+# Build:  apptainer build art.sif containers/art_modern.def
+# (or)    singularity build art.sif containers/art_modern.def
+#
+# NOTE: art_modern is not on bioconda; it is built from source below. Pin the
+# commit/tag before release. This recipe is a TEMPLATE and has not been built
+# in this scaffold - verify versions and the build step on your system.
+
+%post
+    set -eux
+    mamba install -y -c bioconda -c conda-forge \
+        samtools rsem seqkit seqtk \
+        cmake make gcc gxx boost-cpp zlib
+
+    # ---- build art_modern from source ----
+    cd /opt
+    git clone https://github.com/YU-Zhejian/art_modern.git
+    cd art_modern
+    # git checkout <PINNED_TAG_OR_COMMIT>
+    mkdir -p opt/build_release
+    cmake -S . -B opt/build_release -DCMAKE_BUILD_TYPE=Release
+    make -C opt/build_release -j"$(nproc)"
+    install -m 0755 opt/build_release/art_modern /usr/local/bin/art_modern
+
+%test
+    art_modern --version
+    samtools --version | head -n1
+    rsem-tbam2gbam 2>&1 | head -n1 || true
+    seqkit version
+
+%labels
+    Description "art_modern + samtools + rsem + seqkit for scARTist read simulation"

@@ -1,0 +1,47 @@
+# scARTist - single-cell isoform-usage read simulation
+# scDesign2 (counts) -> art_modern (reads) -> RSEM (transcript->genome BAM)
+#
+# NOTE: This scaffold has NOT been executed end-to-end. Rules encode the DAG and
+# port the original logic; expect to smoke-test on resources/example before a run.
+
+import os
+
+configfile: "config/config.yaml"
+
+RD = config["sweep"]["read_depths"]
+CELLS = config["sweep"]["n_cells"]
+ARMS = config["sweep"]["arms"]
+
+
+def cells_of(nc):
+    return list(range(1, int(nc) + 1))
+
+
+# Terminal targets: one genome-space BAM per (read_depth, n_cells, arm, cell).
+GENOME_BAMS = [
+    f"results/reads/rd_{rd}_cells_{nc}/{arm}/Bcell_genome.{cell}.bam"
+    for rd in RD
+    for nc in CELLS
+    for arm in ARMS
+    for cell in cells_of(nc)
+]
+
+
+rule all:
+    input:
+        GENOME_BAMS
+
+
+include: "rules/fit_model.smk"
+include: "rules/simulate_counts.smk"
+include: "rules/pbsim3_input.smk"
+include: "rules/simulate_reads.smk"
+
+
+# Convenience target: stop after count simulation (skip read simulation).
+rule counts_only:
+    input:
+        expand(
+            "results/sim_counts/rd_{rd}_cells_{nc}/simulation_{arm}.txt",
+            rd=RD, nc=CELLS, arm=ARMS,
+        ),

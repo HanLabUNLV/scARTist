@@ -1,0 +1,30 @@
+# scARTist - keep the repo to code + config + small example data only.
+
+# Snakemake
+.snakemake/
+logs/
+
+# Pipeline outputs
+results/
+
+# Large reference inputs the user supplies locally (see docs/inputs.md)
+resources/*.sif
+resources/*.txt
+resources/*.tab
+resources/*.fa
+resources/*.fa.gz
+resources/*.gtf
+resources/*.gff
+resources/rsem_reference/
+# ...but DO track the tiny bundled example
+!resources/example/**
+
+# R / session junk
+.RData
+.Rhistory
+*.Rout
+nohup.out
+
+# OS / editor
+.DS_Store
+*.swp
