@@ -8,6 +8,9 @@
 suppressPackageStartupMessages({
   library(gtools)
   library(dplyr)
+  library(fastglm)   # MUST be attached: the scDesign2 fork's refit calls
+                     # glm.nb(method="fastglm"), which only resolves when
+                     # fastglm is on the search path (matches Stage 1 / original)
   library(copula)
   library(scDesign2)
   library(tictoc)

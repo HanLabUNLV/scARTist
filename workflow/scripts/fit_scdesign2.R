@@ -4,12 +4,14 @@
 ##   - all paths/params come from Snakemake (no hardcoded /mnt/storage/... paths)
 ##   - the output directory is created BEFORE anything is written to it
 ##     (original called dir.create("groundtruth") AFTER writing into it)
-##   - optional cached biomaRt gene->chromosome table for reproducibility
+##   - dropped the live biomaRt gene->chromosome lookup: it fetched
+##     chromosome_name into gene_summary but that column was never used or
+##     written (dead in the original too). Removing it makes Stage 1 offline and
+##     leaves every output byte-identical.
 
 suppressPackageStartupMessages({
   library(gtools)
   library(dplyr)
-  library(biomaRt)
   library(fastglm)
   library(copula)
   library(scDesign2)
@@ -36,25 +38,6 @@ nbr_diff_spliced <- as.integer(p[["nbr_diff_spliced"]])
 ncores           <- as.integer(p[["ncores"]])
 
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
-
-## ---- gene->chromosome lookup (cached or live biomaRt) ---------------------
-get_chrom_table <- function(ensembl_gene_ids) {
-  if (isTRUE(p[["use_cached_biomart"]])) {
-    message("Reading cached gene->chromosome table...")
-    read.table(p[["biomart_cache"]], header = TRUE, sep = "\t",
-               stringsAsFactors = FALSE)
-  } else {
-    mart <- useMart("ENSEMBL_MART_ENSEMBL", dataset = p[["biomart_dataset"]],
-                    host = p[["biomart_host"]])
-    bm <- getBM(attributes = c("ensembl_gene_id", "chromosome_name"),
-                filters = "ensembl_gene_id", values = ensembl_gene_ids,
-                mart = mart)
-    ## cache for reproducibility of future runs
-    write.table(bm, p[["biomart_cache"]], row.names = FALSE, quote = FALSE,
-                sep = "\t")
-    bm
-  }
-}
 
 ## ---- read real matrix + parse GENCODE headers -----------------------------
 data_mat <- read.table(isoform_scCounts_file, sep = "\t", header = TRUE)
@@ -105,12 +88,6 @@ if (nbr_diff_expr > 0) {
 }
 gene_summary$fold_change <- fold_changes_arr
 isoform_with_gene_fold_change <- isoform.scCounts %>% left_join(gene_summary, by = "geneID")
-
-## ---- attach chromosomes ---------------------------------------------------
-gene_summary$ensembl_gene_id <- vapply(strsplit(gene_summary$geneID, "[.]"),
-                                       `[`, character(1), 1)
-bm <- get_chrom_table(gene_summary$ensembl_gene_id)
-gene_summary <- merge(gene_summary, bm, by = "ensembl_gene_id", all = TRUE)
 
 ## ---- rMATS detectability (from mapped events) -----------------------------
 data <- read.table(mapped_events_file, stringsAsFactors = FALSE, sep = "\t", header = TRUE)

@@ -1,7 +1,6 @@
 # scARTist
 
-**sc**(single-cell) + **ART** (the read engine) + **ist** = single-cell ART
-Isoform Simulation Tool.
+**sc** + **ART**  + **ist** = single-cell ART isoform simulation tool.
 
 Single-cell isoform-resolved read simulation for benchmarking differential
 splicing / differential transcript usage (DTU) methods.
@@ -14,7 +13,7 @@ per-cell counts into realistic paired-end short reads with
 [art_modern](https://github.com/YU-Zhejian/art_modern), and maps the
 transcriptome alignments to genome coordinates with
 [RSEM](https://github.com/deweylab/RSEM). The output is a set of per-cell
-genome-space BAMs with a known isoform-usage ground truth.
+genome-space BAMs (and optional FastQs) with a known isoform-usage ground truth.
 
 > Status: pre-release scaffold ported from research scripts. The workflow
 > encodes the full DAG but has not yet been executed end-to-end; smoke-test on
@@ -71,11 +70,7 @@ snakemake counts_only --cores 8 --use-conda
 
 `scARTist` simulates **full-length (Smart-seq2-like) per-cell short-read
 libraries**; it does **not** model UMIs or cell barcodes and is therefore not a
-Smart-seq3 or droplet-protocol simulator. Related simulators include
-[smartSim](https://github.com/MarchalLab/smartSim) (Smart-seq3, splicing ground
-truth), [scReadSim](https://github.com/JSB-UCLA/scReadSim) (gene-level ground
-truth) and [AsaruSim](https://github.com/) (long-read). See the manuscript for a
-feature comparison.
+Smart-seq3 or droplet-protocol simulator. 
 
 ## Citing
 

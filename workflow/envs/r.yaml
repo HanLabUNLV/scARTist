@@ -12,8 +12,6 @@ dependencies:
   - r-copula
   - r-fastglm
   - r-tictoc
-  # Bioconductor
-  - bioconductor-biomart
   # scDesign2 is not on bioconda; install from GitHub in a post-deploy step:
   #   Rscript -e 'remotes::install_github("JSB-UCLA/scDesign2")'
   - r-remotes

@@ -18,13 +18,9 @@ rule fit_model:
         nbr_diff_expr=config["model"]["nbr_diff_expr"],
         nbr_diff_spliced=config["model"]["nbr_diff_spliced"],
         ncores=config["model"]["fit_ncores"],
-        biomart_host=config["model"]["biomart_host"],
-        biomart_dataset=config["model"]["biomart_dataset"],
-        use_cached_biomart=config["model"]["use_cached_biomart"],
-        biomart_cache=config["model"]["biomart_cache"],
     threads: config["model"]["fit_ncores"]
-    conda:
-        "../envs/r.yaml"
+    container:
+        "resources/r.sif"
     log:
         "logs/fit_model.log",
     script:

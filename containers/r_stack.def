@@ -1,0 +1,40 @@
+Bootstrap: docker
+From: condaforge/mambaforge:latest
+
+# R stack for scARTist's count-simulation rules (fit_model, simulate_counts,
+# build_pbsim3_table). Replaces the conda: r.yaml env, which proved fragile on
+# the host (attrs incompatibility in the runner; scDesign2 landing in the user
+# lib and vanishing under `Rscript --vanilla`). Inside the container everything
+# installs into the container's own site library, so those problems disappear.
+#
+# Build:  apptainer build --fakeroot resources/r.sif containers/r_stack.def
+#         (run from the scARTist root, so %files can see vendor/scDesign2)
+#
+# scDesign2 here is the PATCHED FORK vendored under vendor/scDesign2, NOT the
+# public package: the pipeline needs simulate_count_scDesign2(fold_change=) for
+# DE/DTU injection and the fastglm-based fit_model_scDesign2. See
+# vendor/SCDESIGN2_PROVENANCE.md. Stock scDesign2 lacks fold_change.
+
+%files
+    vendor/scDesign2 /opt/scDesign2
+
+%post
+    set -eux
+    mamba install -y -c conda-forge -c bioconda \
+        "r-base>=4.3" \
+        r-dplyr r-tidyr r-stringr r-gtools r-copula r-fastglm r-tictoc \
+        r-mass r-pscl \
+        gcc gxx make
+    # NB: do NOT run `mamba clean` here -- installing r-base into the base env
+    # upgrades libxml2 and breaks libmambapy (libxml2.so.2 missing), which aborts
+    # the build. R itself is fine. Just delete cached tarballs.
+    rm -rf /opt/conda/pkgs/*.tar.bz2 /opt/conda/pkgs/*.conda /opt/conda/pkgs/cache || true
+
+    # Install the vendored patched scDesign2 fork into the container site library.
+    R CMD INSTALL /opt/scDesign2
+
+%test
+    Rscript --vanilla -e 'for (p in c("scDesign2","copula","dplyr","stringr","gtools","fastglm","tictoc")) library(p, character.only=TRUE); stopifnot("fold_change" %in% names(formals(scDesign2::simulate_count_scDesign2))); cat("R stack OK (patched scDesign2, fold_change present):", as.character(packageVersion("scDesign2")), "\n")'
+
+%labels
+    Description "R stack (patched scDesign2 fork w/ fold_change + fastglm, copula) for scARTist count simulation"

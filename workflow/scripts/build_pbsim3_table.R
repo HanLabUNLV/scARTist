@@ -23,18 +23,24 @@ dir.create(dirname(out_file), recursive = TRUE, showWarnings = FALSE)
 
 cnts <- read.table(counts_file, header = TRUE, sep = "\t", check.names = FALSE)
 
+## Per-cell count columns are named after the cell type. In the deds arm they are
+## already unique ("<cell_type>.1".."<cell_type>.N"); in the null arm they are ALL
+## literally "<cell_type>" (duplicates), which breaks a name-based join. Rename
+## them to unique, cell-ORDERED names so both arms work (the original selected by
+## fixed column position instead).
+count_idx <- grep(paste0("^", cell_type), colnames(cnts))
+if (length(count_idx) == 0)
+  stop("No per-cell count columns matched prefix '", cell_type, "'")
+count_cols <- paste0(cell_type, ".", seq_along(count_idx))
+colnames(cnts)[count_idx] <- count_cols
+message(sprintf("Found %d per-cell count columns.", length(count_idx)))
+
 gtab <- read.table(gencode_tab, header = FALSE, sep = "\t",
                    quote = "", comment.char = "", stringsAsFactors = FALSE)
 gtab$transcript_id <- str_extract(gtab$V1, "^ENST\\d+\\.\\d+(_PAR_Y)?")
 gtab <- gtab[, c("transcript_id", "V2")]
 
 merged <- cnts %>% left_join(gtab, by = c("transcriptID" = "transcript_id"))
-
-## select the per-cell count columns by name prefix (robust to cell number)
-count_cols <- grep(paste0("^", cell_type), colnames(cnts), value = TRUE)
-if (length(count_cols) == 0)
-  stop("No per-cell count columns matched prefix '", cell_type, "'")
-message(sprintf("Found %d per-cell count columns.", length(count_cols)))
 
 out <- merged[, c("transcriptID", count_cols, "V2")]
 

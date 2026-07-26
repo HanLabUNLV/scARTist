@@ -12,8 +12,8 @@ rule build_pbsim3_table:
         gencode_tab=config["inputs"]["gencode_transcripts_tab"],
     output:
         table="results/pbsim3/rd_{rd}_cells_{nc}/{arm}/transcripts.pbsim3_table.tsv",
-    conda:
-        "../envs/r.yaml"
+    container:
+        "resources/r.sif"
     log:
         "logs/build_pbsim3/rd_{rd}_cells_{nc}_{arm}.log",
     script:

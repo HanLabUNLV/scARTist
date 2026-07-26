@@ -20,8 +20,8 @@ rule simulate_counts:
         marginal=config["model"]["marginal"],
         ncores=config["model"]["fit_ncores"],
     threads: config["model"]["fit_ncores"]
-    conda:
-        "../envs/r.yaml"
+    container:
+        "resources/r.sif"
     log:
         "logs/simulate_counts/rd_{rd}_cells_{nc}.log",
     script:
