@@ -1,0 +1,44 @@
+# scARTist EXAMPLE configuration - runs the whole pipeline on the small bundled
+# dataset under resources/example/ (~50 genes). Paths are RELATIVE to the repo
+# root (the Snakemake launch dir), so this works wherever the repo is cloned.
+#
+# Run (from the repo root):
+#   snakemake --cores 8 --use-singularity --singularity-args "--bind $PWD" \
+#     --configfile config/config.example.yaml -p
+# ($PWD binds the repo into the containers; the read rule falls back to
+#  singularity's default cwd mount when container.bind is empty.)
+
+inputs:
+  real_count_matrix: "resources/example/Bcell.NumReads.example.txt"
+  mapped_events: "resources/example/Mapped.EventsToExons.example.txt"
+  gencode_transcripts_tab: "resources/example/gencode.v34.transcripts.example.tab"
+  qual_profile_r1: "resources/example/HiSeq2500L125R1.txt"
+  qual_profile_r2: "resources/example/HiSeq2500L125R2.txt"
+  # mini RSEM reference built from a subset GTF + genome (genome is build-time only)
+  rsem_reference_prefix: "resources/example/rsem_ref/example"
+
+container:
+  sif: "resources/art.sif"
+  bind: ""                    # empty -> singularity default $PWD (repo) mount
+
+model:
+  seed: 123
+  cell_type: "Bcell"
+  marginal: "nb"
+  read_len: 50
+  nbr_diff_expr: 10           # small: example has ~50 genes
+  nbr_diff_spliced: 5
+  fit_ncores: 4
+
+sweep:
+  read_depths: [1000000]      # one shallow depth
+  n_cells: [4]                # a handful of cells
+  arms: ["null", "deds"]
+
+reads:
+  read_len: 125
+  fcov: 10
+  pe_frag_dist_mean: 300
+  pe_frag_dist_std_dev: 50
+  art_threads: 4
+  rsem_threads: 4
