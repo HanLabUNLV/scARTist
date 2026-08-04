@@ -11,7 +11,7 @@ wherever they live. Large files are git-ignored by design.
 | `gencode_transcripts_tab` | `gencode.v34.transcripts.tab` | 2-column tab file: transcript header, sequence. | `seqkit fx2tab gencode.v34.transcripts.fa > gencode.v34.transcripts.tab` |
 | `qual_profile_r1` / `qual_profile_r2` | `HiSeq2500L125R1.txt` / `...R2.txt` | Illumina quality profiles for art_modern. | Ship with art_modern (`data/Illumina_profiles/`) or build from real FASTQ. |
 | `rsem_reference_prefix` | `rsem_reference/Homo_sapiens.GRCh38.v34` | RSEM reference prefix used by `rsem-tbam2gbam`. | `rsem-prepare-reference --gtf gencode.v34.annotation.gtf genome.fa <prefix>` (see below). |
-| `container.sif` | `art.sif` | Singularity image bundling art_modern, samtools, rsem, seqkit. | Build from `containers/art_modern.def`. |
+| `container.sif` | `art.sif` | Singularity image bundling art_modern, samtools, rsem, seqkit. | Build from `containers/art.def`. |
 
 ## Building the RSEM reference
 

@@ -38,7 +38,7 @@ inputs:
 # ----------------------------------------------------------------------------
 container:
   # Path to the prebuilt Singularity/Apptainer image, or build it from
-  # containers/art_modern.def (see docs/installation.md).
+  # containers/art.def (see docs/installation.md).
   sif: "resources/art.sif"
   # Extra bind mounts passed to `singularity exec --bind` (comma-separated),
   # e.g. the storage root that holds your inputs/outputs. Bind the project root

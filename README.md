@@ -43,7 +43,7 @@ Rscript -e 'remotes::install_github("JSB-UCLA/scDesign2")'
 pip install snakemake
 
 # 2. build the tools container (art_modern + samtools + rsem + seqkit)
-apptainer build resources/art.sif containers/art_modern.def
+apptainer build resources/art.sif containers/art.def
 
 # 3. put your reference inputs in resources/ and edit config/config.yaml
 #    (see docs/inputs.md)

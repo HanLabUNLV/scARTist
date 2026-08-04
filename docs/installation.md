@@ -25,10 +25,10 @@ Alternatively let Snakemake manage it per-rule with `--use-conda`.
 ## 2. Tools container
 
 ```bash
-apptainer build resources/art.sif containers/art_modern.def
+apptainer build resources/art.sif containers/art.def
 ```
 
-Pin the art_modern commit/tag in `containers/art_modern.def` before release.
+Pin the art_modern commit/tag in `containers/art.def` before release.
 If you already have a working `art.sif`, just point `container.sif` in
 `config/config.yaml` at it and skip this step.
 

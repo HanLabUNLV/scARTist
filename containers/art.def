@@ -1,0 +1,144 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    SINGULARITY_VERSION 3.5.3-1.1.el7
+    SINGULARITY_IMAGE_SIZE 20480
+
+    AUTHOR_NAME Richard Van
+    AUTHOR_EMAIL richard.van@unlv.edu
+
+    LAST_UPDATED 20240913
+
+%environment
+    # Set system locale
+    export LC_ALL=C
+
+    alias ls='ls --color=auto -h'
+    alias rm='rm -i'
+    alias vi='vim'
+
+%files 
+
+%runscript
+    exec /bin/bash --noprofile  "$@"
+
+%startscript
+
+%post -c /bin/bash
+
+    echo "Hello from inside the container"
+    # Set system locale
+    export LC_ALL=C
+    apt-get -y update && apt-get install -y wget zip pigz gawk git vim
+    apt install -y build-essential
+    apt-get install -y gcc-10 gcc-10-base gcc-10-doc g++-10
+    apt-get install -y libstdc++-10-dev libstdc++-10-doc
+    apt-get install -y libbz2-dev
+    apt-get install -y zlib1g-dev
+    apt-get install -y libncurses5-dev 
+    apt-get install -y liblzma-dev
+    apt-get install -y libdeflate-dev
+    apt-get install -y libcurl4-openssl-dev
+    apt-get install -y cmake pkg-config
+    apt-get install -y libboost-all-dev
+
+    # install htslib 
+    wget https://github.com/samtools/htslib/releases/download/1.21/htslib-1.21.tar.bz2
+    bzip2 -d htslib-1.21.tar.bz2
+    tar -xvf htslib-1.21.tar
+    cd htslib-1.21/
+    ./configure 'CFLAGS=-O3 -mtune=native'
+    make
+    make install    
+    cd ../
+
+
+    # install art_modern
+    cd /opt/
+    git clone https://github.com/YU-Zhejian/art_modern.git 
+    cd art_modern
+    cmake -DCMAKE_BUILD_TYPE=Release
+    echo '#include <cstring>' >> src/lib/fasta/BaseFastaFetch.new
+    cat src/lib/fasta/BaseFastaFetch.cc >> src/lib/fasta/BaseFastaFetch.new
+    mv src/lib/fasta/BaseFastaFetch.new src/lib/fasta/BaseFastaFetch.cc 
+    echo '#include <array>' >> src/lib/PairwiseAlignment.new
+    cat src/lib/PairwiseAlignment.hh >> src/lib/PairwiseAlignment.new
+    mv src/lib/PairwiseAlignment.new src/lib/PairwiseAlignment.hh
+    sed -i 's#init_file_logger("log.d")#init_file_logger("/tmp/log.d")#' src/art/main.cc 
+    sed -i -e 's/\(tags[[:digit:]]*\).add_int_i("NM", \(nm_tag[[:digit:]]*\));/\1.add_int_i("NM", \2);\n    \1.add_int_i("NH", 1);/g' src/lib/out/BamReadOutput.cc
+    sed -i -e 's/\(tags[[:digit:]]*\).add_int_i("NM", \(nm_tag[[:digit:]]*\));/\1.add_int_i("NM", \2);\n    \1.add_int_i("NH", 1);/g' src/lib/out/HeadlessBamReadOutput.cc
+    make -j40
+    cd ../
+
+    # download and install miniconda 
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    bash miniconda.sh -b -p /opt/conda
+    source /opt/conda/etc/profile.d/conda.sh
+    conda update -y -n base conda
+    conda install -y -n base conda-libmamba-solver
+    conda config --set solver libmamba
+    conda config --add channels conda-forge
+    conda config --append channels bioconda
+
+    # create conda environment and install conda packages 
+    conda create -y -n art 
+
+    #conda create -n art --file art.list
+    rm miniconda.sh -f
+    conda clean -y -a
+
+    # activate conda for further installation
+    conda init
+    conda activate art
+
+    # pip install 
+
+    # install conda packages
+    conda install -y bioconda::seqtk
+    conda install -y bioconda::seqkit
+    conda install -y bioconda::samtools
+
+    # copy art
+    cp /opt/art_modern/libart_modern_lib.so /opt/conda/envs/art/lib/
+    cp /opt/art_modern/art_modern /opt/conda/envs/art/bin/  
+
+    # install rsem
+    cd /opt/
+    git clone https://github.com/deweylab/RSEM.git
+    cd RSEM
+    make
+    make install DESTDIR=/opt/conda/envs prefix=/art
+    cd ..
+
+
+    # create directories
+    mkdir -p /mnt /scratch 
+    mkdir -p /mnt/storage_cluster /mnt/data_schen_1
+    for i in $(seq 1 10); do
+      mkdir -p /data${i};
+    done
+    mkdir /etc/ncbi
+
+    # create custom bash script to set env
+    echo "export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH" >> $SINGULARITY_ENVIRONMENT
+    echo "## Activate conda environment" >> $SINGULARITY_ENVIRONMENT
+    echo "source /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+    echo "conda activate art" >> $SINGULARITY_ENVIRONMENT
+
+
+    # create condarc
+cat > /opt/conda/.condarc <<EOF
+channels:
+  - conda-forge
+  - defaults
+  - bioconda
+solver: libmamba
+envs_dirs:
+  - /opt/conda/envs
+EOF
+
+
+%test
+
+
