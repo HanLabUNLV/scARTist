@@ -6,7 +6,7 @@
 rule simulate_cell_reads:
     input:
         table="results/pbsim3/rd_{rd}_cells_{nc}/{arm}/transcripts.pbsim3_table.tsv",
-        sif=config["container"]["sif"],
+        sif=ARTSIF,
         qual1=config["inputs"]["qual_profile_r1"],
         qual2=config["inputs"]["qual_profile_r2"],
     output:
@@ -23,12 +23,13 @@ rule simulate_cell_reads:
         frag_sd=config["reads"]["pe_frag_dist_std_dev"],
         art_threads=config["reads"]["art_threads"],
         rsem_threads=config["reads"]["rsem_threads"],
+        script=READS_SCRIPT,
     threads: config["reads"]["art_threads"]
     log:
         "logs/simulate_reads/rd_{rd}_cells_{nc}_{arm}_cell{cell}.log",
     shell:
         r"""
-        bash workflow/scripts/simulate_cell_reads.sh \
+        bash {params.script} \
             --table {input.table} \
             --cell {wildcards.cell} \
             --count-col {params.count_col} \

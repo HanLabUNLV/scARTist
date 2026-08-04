@@ -20,7 +20,7 @@ rule fit_model:
         ncores=config["model"]["fit_ncores"],
     threads: config["model"]["fit_ncores"]
     container:
-        "resources/r.sif"
+        RSIF
     log:
         "logs/fit_model.log",
     script:

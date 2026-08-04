@@ -35,6 +35,29 @@ On a cluster, add a Snakemake profile (`--profile <profile>`); each per-cell job
 requests `reads.art_threads` cores and the model steps request
 `model.fit_ncores`.
 
+## Output location (`--directory`)
+
+All outputs are written under `results/` **relative to the working directory**,
+including the shared `results/groundtruth/` (one fit per study). To put a study's
+outputs somewhere else -- or to run two independent studies without them sharing
+(and clobbering) the same `results/groundtruth/` -- give each its own working
+directory with Snakemake's built-in `--directory`:
+
+```bash
+snakemake --snakefile /path/to/scARTist/workflow/Snakefile \
+          --directory /path/to/studyA_out \
+          --configfile /path/to/config.yaml \
+          --cores 40 --use-singularity
+```
+
+Everything (`groundtruth/`, `sim_counts/`, `reads/`) then lands under
+`/path/to/studyA_out/results/...`. Package resources (`r.sif`, `art.sif`, the
+read-simulation script) are resolved relative to the workflow directory, not the
+working directory, so `--directory` relocates outputs without breaking the run.
+Point `inputs:` at absolute paths (or paths valid from the working directory),
+and make sure `container.bind` (and any `--singularity-args --bind`) covers the
+chosen output directory so the container can write there.
+
 ## Stages
 
 | Stage | Rule | Runs | Output |

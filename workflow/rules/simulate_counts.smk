@@ -21,7 +21,7 @@ rule simulate_counts:
         ncores=config["model"]["fit_ncores"],
     threads: config["model"]["fit_ncores"]
     container:
-        "resources/r.sif"
+        RSIF
     log:
         "logs/simulate_counts/rd_{rd}_cells_{nc}.log",
     script:

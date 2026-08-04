@@ -8,6 +8,17 @@ import os
 
 configfile: "config/config.yaml"
 
+# Package-internal resources are anchored to the workflow directory (absolute),
+# NOT to the launch CWD. This makes the pipeline launch-dir independent: you can
+# relocate the ENTIRE output tree with `snakemake --directory DIR` (each study
+# gets its own results/ -- groundtruth, sim_counts, reads -- so separate studies
+# never clobber the shared results/groundtruth). See docs/usage.md.
+# workflow.basedir is the Snakefile's dir (.../scARTist/workflow); PKG is its parent.
+PKG = os.path.dirname(workflow.basedir)
+RSIF = os.path.join(PKG, "resources", "r.sif")
+ARTSIF = os.path.join(PKG, "resources", "art.sif")
+READS_SCRIPT = os.path.join(workflow.basedir, "scripts", "simulate_cell_reads.sh")
+
 RD = config["sweep"]["read_depths"]
 CELLS = config["sweep"]["n_cells"]
 ARMS = config["sweep"]["arms"]

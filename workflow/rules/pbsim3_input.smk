@@ -13,7 +13,7 @@ rule build_pbsim3_table:
     output:
         table="results/pbsim3/rd_{rd}_cells_{nc}/{arm}/transcripts.pbsim3_table.tsv",
     container:
-        "resources/r.sif"
+        RSIF
     log:
         "logs/build_pbsim3/rd_{rd}_cells_{nc}_{arm}.log",
     script:
