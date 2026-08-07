@@ -17,7 +17,6 @@ configfile: "config/config.yaml"
 PKG = os.path.dirname(workflow.basedir)
 RSIF = os.path.join(PKG, "resources", "r.sif")
 ARTSIF = os.path.join(PKG, "resources", "art.sif")
-READS_SCRIPT = os.path.join(workflow.basedir, "scripts", "simulate_cell_reads.sh")
 
 RD = config["sweep"]["read_depths"]
 CELLS = config["sweep"]["n_cells"]
