@@ -74,3 +74,4 @@ reads:
   pe_frag_dist_std_dev: 50
   art_threads: 4              # --parallel for art_modern and -@ for samtools
   rsem_threads: 4             # -p for rsem-tbam2gbam
+  keep_fastq: false           # default: keep only the genome BAM; true retains the ~7x-larger per-read FASTQ

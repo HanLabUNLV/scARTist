@@ -9,8 +9,13 @@
 set -euo pipefail
 
 # ---- parse args -----------------------------------------------------------
+# Default: keep ONLY the genome BAM. The per-read FASTQ (~7x the genome BAM size:
+# 3.7G vs 500M/cell) is never read downstream -- rMATS/DEXSeq/GrASE use the genome
+# BAM (built from --o-sam), not the reads. Pass --keep-fastq to retain it.
+KEEP_FASTQ=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --keep-fastq)   KEEP_FASTQ=1; shift 1;;
         --table)        TABLE="$2"; shift 2;;
         --cell)         CELL="$2"; shift 2;;
         --count-col)    COUNT_COL="$2"; shift 2;;
@@ -69,5 +74,9 @@ sing samtools sort -n -@ "${ART_THREADS}" "${TBAM}" -o "${SORTED}"
 sing rsem-tbam2gbam "${RSEM_PREFIX}" "${SORTED}" "${GBAM}" -p "${RSEM_THREADS}"
 
 # ---- tidy per-cell intermediates ------------------------------------------
+# Always drop the pbsim table + transcriptome BAMs (never needed again). Drop the
+# FASTQ too unless --keep-fastq -- it is the largest artifact (3.7G vs 500M genome
+# BAM) and nothing downstream reads it.
 rm -f "${PBSIM3}" "${TBAM}" "${SORTED}"
-echo "Done: ${GBAM}"
+[[ "${KEEP_FASTQ}" -eq 0 ]] && rm -f "${FASTQ}"
+echo "Done: ${GBAM}$([[ ${KEEP_FASTQ} -eq 1 ]] && echo ' (+fastq kept)')"

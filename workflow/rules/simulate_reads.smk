@@ -23,6 +23,7 @@ rule simulate_cell_reads:
         frag_sd=config["reads"]["pe_frag_dist_std_dev"],
         art_threads=config["reads"]["art_threads"],
         rsem_threads=config["reads"]["rsem_threads"],
+        keep_fastq_flag=("--keep-fastq" if config["reads"].get("keep_fastq", False) else ""),
         script=READS_SCRIPT,
     threads: config["reads"]["art_threads"]
     log:
@@ -45,5 +46,6 @@ rule simulate_cell_reads:
             --frag-sd {params.frag_sd} \
             --art-threads {params.art_threads} \
             --rsem-threads {params.rsem_threads} \
+            {params.keep_fastq_flag} \
             > {log} 2>&1
         """
